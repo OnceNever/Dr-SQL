@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dr.SQL</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body th:attr="data-analysis-watch=${hasAnalyzing}">
+<header class="topbar">
+    <div>
+        <h1>Dr.SQL</h1>
+        <p>SQL医生：采集慢 SQL，补全元数据，生成执行计划诊断与优化建议。</p>
+    </div>
+    <div class="actions">
+        <form method="post" th:action="@{/collect}">
+            <button type="submit">采集慢 SQL</button>
+        </form>
+        <form method="post" th:action="@{/sample}">
+            <button type="submit" class="secondary">加载示例</button>
+        </form>
+    </div>
+</header>
+
+<main>
+    <section th:if="${message}" class="notice success" th:text="${message}"></section>
+    <section th:if="${error}" class="notice danger" th:text="${error}"></section>
+
+    <section class="summary">
+        <div>
+            <span class="label">当前捕获</span>
+            <strong th:text="${count}">0</strong>
+        </div>
+        <div>
+            <span class="label">优化执行</span>
+            <strong>禁用</strong>
+        </div>
+        <div>
+            <span class="label">阶段</span>
+            <strong>MVP 1</strong>
+        </div>
+    </section>
+
+    <section class="table-shell">
+        <table>
+            <thead>
+            <tr>
+                <th>SQL 摘要</th>
+                <th>库</th>
+                <th>来源</th>
+                <th>平均耗时</th>
+                <th>最大耗时</th>
+                <th>扫描行数</th>
+                <th>执行次数</th>
+                <th>最近出现</th>
+                <th>分析</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${#lists.isEmpty(records)}">
+                <td colspan="9" class="empty">暂无数据。可以先加载示例，或配置目标 MySQL 后点击采集。</td>
+            </tr>
+            <tr th:each="record : ${records}">
+                <td class="sql-snippet">
+                    <a th:href="@{/slow-sql/{id}(id=${record.id})}" th:text="${record.sqlText}">select ...</a>
+                </td>
+                <td th:text="${record.schemaName}">schema</td>
+                <td th:text="${record.source}">source</td>
+                <td th:text="${#numbers.formatDecimal(record.avgLatencyMs, 1, 2)} + ' ms'">0 ms</td>
+                <td th:text="${#numbers.formatDecimal(record.maxLatencyMs, 1, 2)} + ' ms'">0 ms</td>
+                <td th:text="${record.rowsExamined}">0</td>
+                <td th:text="${record.executionCount}">0</td>
+                <td>
+                    <span th:if="${record.collectedAt != null}"
+                          th:text="${record.collectedAtDisplay}">2026-06-25 19:10:00</span>
+                    <span th:unless="${record.collectedAt != null}" class="muted-text">-</span>
+                </td>
+                <td>
+                    <span th:if="${record.analysisInProgress}" class="badge warning">分析中</span>
+                    <span th:if="${record.hasAnalysis()}" class="badge">已分析</span>
+                    <span th:if="${record.analysisFailed}" class="badge error">分析失败</span>
+                    <span th:if="${!record.analysisInProgress && !record.hasAnalysis() && !record.analysisFailed}"
+                          class="badge muted">待分析</span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+</main>
+<script th:src="@{/js/analysis-poll.js}"></script>
+</body>
+</html>

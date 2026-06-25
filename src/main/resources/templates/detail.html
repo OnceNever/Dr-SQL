@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SQL Detail - Dr.SQL</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body th:attr="data-analysis-record-id=${record.analysisInProgress ? record.id : ''}">
+<header class="topbar compact">
+    <div>
+        <a class="back" th:href="@{/}">返回列表</a>
+        <h1>SQL 诊断详情</h1>
+    </div>
+    <form method="post" th:action="@{/slow-sql/{id}/analyze(id=${record.id})}">
+        <button type="submit"
+                th:disabled="${record.analysisInProgress}"
+                th:text="${record.analysisInProgress ? '分析中...' : (record.hasAnalysis() ? '重新分析' : '生成优化建议')}">
+            生成优化建议
+        </button>
+    </form>
+</header>
+
+<main>
+    <section th:if="${message}" class="notice success" th:text="${message}"></section>
+    <section th:if="${error}" class="notice danger" th:text="${error}"></section>
+
+    <section class="detail-grid">
+        <div>
+            <span class="label">Schema</span>
+            <strong th:text="${record.schemaName}">schema</strong>
+        </div>
+        <div>
+            <span class="label">来源</span>
+            <strong th:text="${record.source}">source</strong>
+        </div>
+        <div>
+            <span class="label">平均耗时</span>
+            <strong th:text="${#numbers.formatDecimal(record.avgLatencyMs, 1, 2)} + ' ms'">0 ms</strong>
+        </div>
+        <div>
+            <span class="label">最大耗时</span>
+            <strong th:text="${#numbers.formatDecimal(record.maxLatencyMs, 1, 2)} + ' ms'">0 ms</strong>
+        </div>
+        <div>
+            <span class="label">扫描行数</span>
+            <strong th:text="${record.rowsExamined}">0</strong>
+        </div>
+        <div>
+            <span class="label">返回行数</span>
+            <strong th:text="${record.rowsSent}">0</strong>
+        </div>
+        <div>
+            <span class="label">最近出现</span>
+            <strong class="time-text" th:if="${record.collectedAt != null}"
+                    th:text="${record.collectedAtDisplay}">2026-06-25 19:10:00</strong>
+            <strong class="time-text" th:unless="${record.collectedAt != null}">-</strong>
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>原始 SQL</h2>
+        <pre class="sql-code" th:text="${record.sqlText}">select ...</pre>
+    </section>
+
+    <section th:if="${record.analysisInProgress}" class="panel">
+        <h2>分析中</h2>
+        <p>正在读取执行计划并调用大模型生成优化建议。你可以返回列表或继续浏览其他页面。</p>
+    </section>
+
+    <section th:if="${record.analysisFailed}" class="panel">
+        <h2>分析失败</h2>
+        <p class="notice danger" th:text="${record.analysisError}">error</p>
+    </section>
+
+    <section th:if="${record.analysisStatus.name() == 'PENDING'}" class="panel">
+        <h2>尚未分析</h2>
+        <p>点击右上角生成优化建议后，会读取表结构、索引、数据量与执行计划。</p>
+    </section>
+
+    <section th:if="${record.analysisReport != null}" class="panel">
+        <h2>执行计划</h2>
+        <p th:if="${record.analysisReport.executionPlan.error}" class="notice danger"
+           th:text="${record.analysisReport.executionPlan.error}">explain error</p>
+        <pre th:unless="${record.analysisReport.executionPlan.error}"
+             th:text="${record.analysisReport.executionPlan.content}">plan</pre>
+    </section>
+
+    <section th:if="${record.analysisReport != null}" class="panel">
+        <h2>诊断结论</h2>
+        <p class="lead" th:text="${record.analysisReport.summary}">summary</p>
+        <dl class="definition">
+            <dt>可能根因</dt>
+            <dd th:text="${record.analysisReport.rootCause}">root cause</dd>
+            <dt>置信度</dt>
+            <dd th:text="${record.analysisReport.confidence}">medium</dd>
+        </dl>
+    </section>
+
+    <section th:if="${record.analysisReport != null}" class="panel">
+        <h2>优化方案</h2>
+        <div class="advice-list">
+            <article th:each="advice : ${record.analysisReport.recommendations}" class="advice">
+                <div class="advice-head">
+                    <span class="rank" th:text="${advice.priority}">1</span>
+                    <h3 th:text="${advice.title}">title</h3>
+                    <span class="badge" th:text="${advice.riskLevel}">risk</span>
+                </div>
+                <p th:text="${advice.strategy}">strategy</p>
+                <dl class="definition compact-dl">
+                    <dt>预计收益</dt>
+                    <dd th:text="${advice.expectedBenefit}">benefit</dd>
+                    <dt>验证 SQL</dt>
+                    <dd><pre class="sql-code" th:text="${advice.validationSql}">EXPLAIN</pre></dd>
+                    <dt>回滚提示</dt>
+                    <dd th:text="${advice.rollbackHint}">rollback</dd>
+                </dl>
+            </article>
+        </div>
+    </section>
+
+    <section th:if="${record.analysisReport != null}" class="panel">
+        <h2>涉及表</h2>
+        <div th:each="table : ${record.analysisReport.tableMetadata}" class="metadata">
+            <h3 th:text="${table.tableRef.displayName()}">table</h3>
+            <p th:if="${table.error}" class="notice danger" th:text="${table.error}">error</p>
+            <dl class="definition compact-dl" th:unless="${table.error}">
+                <dt>估算行数</dt>
+                <dd th:text="${table.estimatedRows}">0</dd>
+                <dt>数据大小</dt>
+                <dd th:text="${table.dataLengthBytes} + ' bytes'">0</dd>
+                <dt>索引大小</dt>
+                <dd th:text="${table.indexLengthBytes} + ' bytes'">0</dd>
+            </dl>
+            <pre class="sql-code" th:unless="${table.error}" th:text="${table.createTableSql}">create table</pre>
+        </div>
+    </section>
+
+    <section th:if="${record.analysisReport != null && !#lists.isEmpty(record.analysisReport.warnings)}" class="panel">
+        <h2>风险提醒</h2>
+        <ul class="warnings">
+            <li th:each="warning : ${record.analysisReport.warnings}" th:text="${warning}">warning</li>
+        </ul>
+    </section>
+</main>
+<script th:src="@{/js/sql-highlight.js}"></script>
+<script th:src="@{/js/analysis-poll.js}"></script>
+</body>
+</html>

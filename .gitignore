@@ -1,0 +1,7 @@
+target/
+.idea/
+*.iml
+
+# Local secrets. Keep config/application.yml on your machine only.
+config/application.yml
+data/

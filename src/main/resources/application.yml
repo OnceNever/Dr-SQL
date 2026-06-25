@@ -1,0 +1,39 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: dr-sql
+  ai:
+    chat:
+      client:
+        enabled: true
+    model:
+      chat: openai
+    openai:
+      api-key: ""
+      base-url: https://api.openai.com
+      chat:
+        options:
+          model: gpt-4o-mini
+          temperature: 0.2
+
+agent:
+  database:
+    type: mysql
+    url: ""
+    username: ""
+    password: ""
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    default-schema: ""
+  collection:
+    enabled: false
+    source: performance_schema
+    slow-query-threshold-ms: 1000
+    limit: 50
+    fixed-delay-ms: 300000
+  analysis:
+    run-explain: true
+    explain-timeout-seconds: 10
+  storage:
+    file: data/slow-sql-records.json
