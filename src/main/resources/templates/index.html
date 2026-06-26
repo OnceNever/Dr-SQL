@@ -76,11 +76,24 @@
                     <span th:unless="${record.collectedAt != null}" class="muted-text">-</span>
                 </td>
                 <td>
-                    <span th:if="${record.analysisInProgress}" class="badge warning">分析中</span>
-                    <span th:if="${record.hasAnalysis()}" class="badge">已分析</span>
-                    <span th:if="${record.analysisFailed}" class="badge error">分析失败</span>
-                    <span th:if="${!record.analysisInProgress && !record.hasAnalysis() && !record.analysisFailed}"
-                          class="badge muted">待分析</span>
+                    <div class="analysis-cell">
+                        <span th:if="${record.analysisInProgress}" class="badge warning">分析中</span>
+                        <span th:if="${record.hasAnalysis()}" class="badge">已分析</span>
+                        <span th:if="${record.analysisFailed}" class="badge error">分析失败</span>
+                        <span th:if="${!record.analysisInProgress && !record.hasAnalysis() && !record.analysisFailed}"
+                              class="badge muted">待分析</span>
+                        <form method="post"
+                              th:action="@{/slow-sql/{id}/analyze(id=${record.id}, returnTo='list')}"
+                              data-disable-on-submit>
+                            <button type="submit"
+                                    class="analysis-action"
+                                    data-submitting-text="分析中..."
+                                    th:disabled="${record.analysisInProgress}"
+                                    th:text="${record.analysisInProgress ? '分析中...' : (record.hasAnalysis() ? '重新分析' : '分析')}">
+                                分析
+                            </button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             </tbody>

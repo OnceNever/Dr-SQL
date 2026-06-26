@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8052
 
 spring:
   application:
@@ -28,7 +28,9 @@ agent:
     default-schema: ""
   collection:
     enabled: false
-    source: performance_schema
+    sources:
+      - slow_log
+      - performance_schema
     slow-query-threshold-ms: 1000
     limit: 50
     fixed-delay-ms: 300000

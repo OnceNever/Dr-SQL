@@ -29,7 +29,7 @@ English documentation is available below.
 推荐直接运行主程序：
 
 ```text
-com.example.slowsqlagent.SlowSqlAgentApplication
+com.sql.agent.SlowSqlAgentApplication
 ```
 
 IDE 配置：
@@ -37,7 +37,7 @@ IDE 配置：
 ```text
 JDK: D:\java
 Working directory: E:\slow-sql-agent
-Main class: com.example.slowsqlagent.SlowSqlAgentApplication
+Main class: com.sql.agent.SlowSqlAgentApplication
 ```
 
 也可以用 Maven 启动：
@@ -50,7 +50,7 @@ mvn spring-boot:run
 打开：
 
 ```text
-http://localhost:8080
+http://localhost:8052
 ```
 
 启动前需要先配置 `config/application.yml`，否则应用会在启动阶段提示缺失配置。
@@ -83,15 +83,18 @@ agent:
     password: "password"
     default-schema: "shop"
   collection:
-    source: performance_schema
+    sources:
+      - performance_schema
 ```
 
-也可以改为读取慢日志表：
+也可以同时读取慢日志表和 performance_schema。重复 SQL 会以慢日志表为准：
 
 ```yaml
 agent:
   collection:
-    source: slow_log_table
+    sources:
+      - slow_log
+      - performance_schema
 ```
 
 如果要定时自动采集：
@@ -135,7 +138,7 @@ spring:
 - 读取 `information_schema.TABLES`。
 - 使用 `EXPLAIN`。
 - 如果使用 `performance_schema` 采集，需要读取 `performance_schema.events_statements_summary_by_digest`。
-- 如果使用 `slow_log_table`，需要读取 `mysql.slow_log`。
+- 如果使用 `slow_log` / `slow_log_table`，需要读取 `mysql.slow_log`。
 
 ### API
 
@@ -183,7 +186,7 @@ Run the project with JDK 17 in your IDE or terminal.
 Recommended main class:
 
 ```text
-com.example.slowsqlagent.SlowSqlAgentApplication
+com.sql.agent.SlowSqlAgentApplication
 ```
 
 IDE settings:
@@ -191,7 +194,7 @@ IDE settings:
 ```text
 JDK: D:\java
 Working directory: E:\slow-sql-agent
-Main class: com.example.slowsqlagent.SlowSqlAgentApplication
+Main class: com.sql.agent.SlowSqlAgentApplication
 ```
 
 Or start with Maven:
@@ -204,7 +207,7 @@ mvn spring-boot:run
 Open:
 
 ```text
-http://localhost:8080
+http://localhost:8052
 ```
 
 Update `config/application.yml` before startup. The application validates required OpenAI and database settings during startup.
@@ -237,15 +240,18 @@ agent:
     password: "password"
     default-schema: "shop"
   collection:
-    source: performance_schema
+    sources:
+      - performance_schema
 ```
 
-To collect from the slow log table:
+To collect from both the slow log table and performance_schema. Duplicate SQL keeps the slow log record:
 
 ```yaml
 agent:
   collection:
-    source: slow_log_table
+    sources:
+      - slow_log
+      - performance_schema
 ```
 
 To enable scheduled collection:
@@ -289,7 +295,7 @@ Use a read-only diagnostic account in the first stage. It should be able to:
 - Read `information_schema.TABLES`.
 - Run `EXPLAIN`.
 - Read `performance_schema.events_statements_summary_by_digest` when using `performance_schema`.
-- Read `mysql.slow_log` when using `slow_log_table`.
+- Read `mysql.slow_log` when using `slow_log` / `slow_log_table`.
 
 ### API
 

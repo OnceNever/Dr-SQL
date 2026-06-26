@@ -72,6 +72,12 @@ button.secondary {
     background: #46515f;
 }
 
+button.small {
+    min-height: 30px;
+    padding: 0 10px;
+    font-size: 12px;
+}
+
 button:hover {
     filter: brightness(0.94);
 }
@@ -83,7 +89,7 @@ button:disabled {
 }
 
 main {
-    width: min(1180px, calc(100% - 32px));
+    width: min(1360px, calc(100% - 32px));
     margin: 24px auto 56px;
 }
 
@@ -219,6 +225,29 @@ th {
 .badge.error {
     background: #ffe4e1;
     color: #9f2f23;
+}
+
+.analysis-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.analysis-cell form {
+    display: inline-flex;
+    margin: 0;
+}
+
+button.analysis-action {
+    min-height: 24px;
+    padding: 0 7px;
+    border: 1px solid #bfd4dd;
+    border-radius: 4px;
+    background: transparent;
+    color: #176b87;
+    font-size: 12px;
+    font-weight: 700;
 }
 
 .back {
@@ -375,7 +404,7 @@ pre {
 
 @media (max-width: 520px) {
     main {
-        width: min(100% - 20px, 1180px);
+        width: min(100% - 20px, 1360px);
     }
 
     .summary,

@@ -12,8 +12,9 @@
         <a class="back" th:href="@{/}">返回列表</a>
         <h1>SQL 诊断详情</h1>
     </div>
-    <form method="post" th:action="@{/slow-sql/{id}/analyze(id=${record.id})}">
+    <form method="post" th:action="@{/slow-sql/{id}/analyze(id=${record.id})}" data-disable-on-submit>
         <button type="submit"
+                data-submitting-text="分析中..."
                 th:disabled="${record.analysisInProgress}"
                 th:text="${record.analysisInProgress ? '分析中...' : (record.hasAnalysis() ? '重新分析' : '生成优化建议')}">
             生成优化建议
