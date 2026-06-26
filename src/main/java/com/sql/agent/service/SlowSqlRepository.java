@@ -59,7 +59,11 @@ public class SlowSqlRepository {
 
     public List<SlowSqlRecord> findAll() {
         return records.values().stream()
-                .sorted(Comparator.comparing(SlowSqlRecord::getAvgLatencyMs).reversed())
+                .sorted(Comparator.comparing(
+                                SlowSqlRecord::getCollectedAt,
+                                Comparator.nullsFirst(Comparator.naturalOrder()))
+                        .reversed()
+                        .thenComparing(Comparator.comparing(SlowSqlRecord::getAvgLatencyMs).reversed()))
                 .toList();
     }
 
@@ -121,6 +125,9 @@ public class SlowSqlRepository {
     private void normalizeLoadedRecord(SlowSqlRecord record) {
         if (record.getCollectedAt() == null) {
             record.setCollectedAt(record.getLastSeen() == null ? record.getFirstSeen() : record.getLastSeen());
+        }
+        if (isSlowLog(record)) {
+            record.setSqlText(SlowSqlKeys.stripLeadingComments(record.getSqlText()));
         }
         if (record.getAnalysisStatus() == AnalysisStatus.ANALYZING) {
             record.setAnalysisStatus(AnalysisStatus.FAILED);

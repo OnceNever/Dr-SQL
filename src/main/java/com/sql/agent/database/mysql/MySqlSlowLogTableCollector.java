@@ -5,6 +5,7 @@ import com.sql.agent.config.TargetJdbcTemplateProvider;
 import com.sql.agent.database.SlowSqlCollector;
 import com.sql.agent.domain.SlowSqlRecord;
 import com.sql.agent.util.HashIds;
+import com.sql.agent.util.SlowSqlKeys;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -59,7 +60,7 @@ public class MySqlSlowLogTableCollector implements SlowSqlCollector {
             SlowSqlRecord record = new SlowSqlRecord();
             record.setSource("slow_log");
             record.setSchemaName(rs.getString("db"));
-            record.setSqlText(rs.getString("sql_text"));
+            record.setSqlText(SlowSqlKeys.stripLeadingComments(rs.getString("sql_text")));
             record.setExecutionCount(rs.getLong("execution_count"));
             record.setAvgLatencyMs(rs.getDouble("avg_latency_ms"));
             record.setMaxLatencyMs(rs.getDouble("max_latency_ms"));
